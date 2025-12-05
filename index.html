@@ -104,6 +104,25 @@
       cursor: pointer;
     }
 
+    /* Backup buttons */
+    .backup-btn {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: none;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+    .backup-btn.primary {
+      background: #0f9d58;
+      color: #fff;
+    }
+    .backup-btn.secondary {
+      background: #e3e6ee;
+      color: #222;
+    }
+
     /* Summary */
     .summary {
       display: flex;
@@ -221,6 +240,10 @@
       border-color: #555;
       color: #fff;
     }
+    body.dark .backup-btn.secondary {
+      background: #2c2c2e;
+      color: #f5f5f5;
+    }
 
     @media (min-width: 768px) {
       body { background: #e3e6ee; }
@@ -295,6 +318,17 @@
       </div>
     </div>
 
+    <!-- BACKUP -->
+    <div class="card">
+      <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Backup</div>
+      <button id="export-btn" class="backup-btn primary">Export CSV</button>
+      <button id="import-btn" class="backup-btn secondary">Import CSV</button>
+      <input id="csv-input" type="file" accept=".csv,text/csv" style="display:none">
+      <div style="font-size:11px;color:#777;margin-top:6px;">
+        Tip: export CSV before big changes / new version. Use Import to restore.
+      </div>
+    </div>
+
     <!-- TABLE -->
     <div class="card">
       <div class="table-wrapper">
@@ -320,21 +354,25 @@
 
   <script>
     const STORAGE_KEY = "ev_charge_log_v4";
-    const THEME_KEY = "ev_theme_v4";
+    const THEME_KEY   = "ev_theme_v4";
 
     let records = [];
     let editingIndex = null;
 
-    const dateInput = document.getElementById("date");
-    const startInput = document.getElementById("start");
-    const endInput   = document.getElementById("end");
+    const dateInput     = document.getElementById("date");
+    const startInput    = document.getElementById("start");
+    const endInput      = document.getElementById("end");
     const locationInput = document.getElementById("location");
-    const rateInput  = document.getElementById("rate");
-    const costInput  = document.getElementById("cost");
+    const rateInput     = document.getElementById("rate");
+    const costInput     = document.getElementById("cost");
 
     const submitBtn = document.getElementById("submit-btn");
     const cancelBtn = document.getElementById("cancel-btn");
     const themeBtn  = document.getElementById("theme-toggle");
+
+    const exportBtn = document.getElementById("export-btn");
+    const importBtn = document.getElementById("import-btn");
+    const csvInput  = document.getElementById("csv-input");
 
     /* LOCATION 自动大写 */
     locationInput.addEventListener("input", () => {
@@ -350,6 +388,31 @@
       const month = d.getMonth() + 1;
       const year = d.getFullYear();
       return `${day}/${month}/${year}`;
+    }
+
+    /* 把各种日期格式变成 ISO (YYYY-MM-DD) */
+    function toISODate(str) {
+      if (!str) return "";
+      str = str.trim();
+      if (!str) return "";
+
+      if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(str)) {
+        return str; // already ISO-like
+      }
+
+      let m;
+      if (m = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/.exec(str)) {
+        let d  = parseInt(m[1], 10);
+        let mo = parseInt(m[2], 10);
+        let y  = parseInt(m[3], 10);
+        if (y < 100) y += 2000;
+        const dt = new Date(y, mo - 1, d);
+        if (!isNaN(dt)) return dt.toISOString().slice(0,10);
+      }
+
+      const dt = new Date(str);
+      if (!isNaN(dt)) return dt.toISOString().slice(0,10);
+      return "";
     }
 
     /* 读写本地数据 */
@@ -408,12 +471,12 @@
       const r = records[i];
       editingIndex = i;
 
-      dateInput.value = r.date;
-      startInput.value = r.start;
-      endInput.value = r.end;
+      dateInput.value     = r.date;
+      startInput.value    = r.start;
+      endInput.value      = r.end;
       locationInput.value = r.location;
-      rateInput.value = r.rate;
-      costInput.value = r.cost;
+      rateInput.value     = r.rate;
+      costInput.value     = r.cost;
 
       submitBtn.textContent = "Save Changes";
       cancelBtn.style.display = "block";
@@ -430,9 +493,11 @@
 
     /* 渲染 */
     function render() {
-      const tbody = document.getElementById("table-body");
-      const emptyRow = document.getElementById("empty-row");
-      const monthlyDiv = document.getElementById("monthly-summary");
+      const tbody       = document.getElementById("table-body");
+      const emptyRow    = document.getElementById("empty-row");
+      const monthlyDiv  = document.getElementById("monthly-summary");
+      const totalCostEl = document.getElementById("total-cost-box");
+      const totalKwhEl  = document.getElementById("total-kwh-box");
 
       tbody.innerHTML = "";
       monthlyDiv.innerHTML = "";
@@ -440,8 +505,8 @@
       if (records.length === 0) {
         emptyRow.style.display = "block";
         monthlyDiv.innerHTML = '<div class="empty">No data yet</div>';
-        document.getElementById("total-cost-box").firstChild.nodeValue = "RM0.00";
-        document.getElementById("total-kwh-box").firstChild.nodeValue = "0.00 kWh";
+        totalCostEl.firstChild.nodeValue = "RM0.00";
+        totalKwhEl.firstChild.nodeValue  = "0.00 kWh";
         return;
       }
 
@@ -483,12 +548,14 @@
 
         const editBtn = document.createElement("button");
         editBtn.className = "icon-btn";
-        editBtn.innerHTML = '<img src="https://img.icons8.com/ios-filled/50/ffffff/edit.png">';
+        editBtn.innerHTML =
+          '<img src="https://img.icons8.com/ios-filled/50/ffffff/edit.png">';
         editBtn.onclick = () => setEditMode(idx);
 
         const delBtn = document.createElement("button");
         delBtn.className = "icon-btn";
-        delBtn.innerHTML = '<img src="https://img.icons8.com/ios-glyphs/30/fa314a/trash.png">';
+        delBtn.innerHTML =
+          '<img src="https://img.icons8.com/ios-glyphs/30/fa314a/trash.png">';
         delBtn.onclick = () => deleteRecord(idx);
 
         actionCell.appendChild(editBtn);
@@ -497,10 +564,8 @@
         tbody.appendChild(tr);
       });
 
-      document.getElementById("total-cost-box").firstChild.nodeValue =
-        "RM" + totalCost.toFixed(2);
-      document.getElementById("total-kwh-box").firstChild.nodeValue =
-        totalKwh.toFixed(2) + " kWh";
+      totalCostEl.firstChild.nodeValue = "RM" + totalCost.toFixed(2);
+      totalKwhEl.firstChild.nodeValue  = totalKwh.toFixed(2) + " kWh";
 
       /* Monthly summary：DEC 2025 */
       const monthNames = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
@@ -522,9 +587,10 @@
         });
     }
 
+    /* 提交 */
     function submit() {
       const r = {
-        date: dateInput.value,
+        date: toISODate(dateInput.value),
         start: Number(startInput.value),
         end: Number(endInput.value),
         location: locationInput.value.trim(),
@@ -551,6 +617,149 @@
     submitBtn.addEventListener("click", submit);
     cancelBtn.addEventListener("click", setAddMode);
 
+    /* ---------- CSV EXPORT / IMPORT ---------- */
+
+    function exportCSV() {
+      if (!records.length) {
+        alert("No data to export.");
+        return;
+      }
+      const lines = ["date,start,end,location,rate,cost"];
+      records.forEach(r => {
+        const loc = (r.location || "").replace(/"/g, '""');
+        const line =
+          `${r.date || ""},${r.start},${r.end},"${loc}",${r.rate},${r.cost}`;
+        lines.push(line);
+      });
+      const csv = lines.join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const now = new Date();
+      const stamp = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,"0")}${String(now.getDate()).padStart(2,"0")}`;
+      a.href = url;
+      a.download = `ev_charge_log_${stamp}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function parseCSV(text) {
+      const rows = text.split(/\r?\n/).filter(l => l.trim());
+      if (!rows.length) return [];
+
+      // 简单 CSV 分割（支持基本引号）
+      const splitRow = (row) => {
+        const result = [];
+        let current = "";
+        let inQuotes = false;
+        for (let i = 0; i < row.length; i++) {
+          const c = row[i];
+          if (c === '"') {
+            inQuotes = !inQuotes;
+            continue;
+          }
+          if (c === "," && !inQuotes) {
+            result.push(current);
+            current = "";
+          } else {
+            current += c;
+          }
+        }
+        result.push(current);
+        return result.map(s => s.trim());
+      };
+
+      const headerCols = splitRow(rows[0]);
+      let hasHeader =
+        headerCols.some(h => /date/i.test(h));
+
+      let startIndex = hasHeader ? 1 : 0;
+
+      let map;
+      if (hasHeader) {
+        const hmap = {};
+        headerCols.forEach((h, i) => {
+          hmap[h.toLowerCase()] = i;
+        });
+        map = {
+          date: hmap["date"],
+          start: hmap["start"] ?? hmap["start%"],
+          end: hmap["end"] ?? hmap["end%"],
+          location: hmap["location"],
+          rate: hmap["rate"],
+          cost: hmap["cost"]
+        };
+      } else {
+        map = { date: 0, start: 1, end: 2, location: 3, rate: 4, cost: 5 };
+      }
+
+      const out = [];
+      for (let i = startIndex; i < rows.length; i++) {
+        const cols = splitRow(rows[i]);
+        if (!cols.length) continue;
+
+        const get = (idx) => (idx != null && cols[idx] != null ? cols[idx] : "").trim();
+
+        const date = toISODate(get(map.date));
+        const rate = Number(get(map.rate));
+        const cost = Number(get(map.cost));
+        const start = Number(get(map.start));
+        const end = Number(get(map.end));
+        const loc = get(map.location).replace(/""/g, '"');
+
+        if (!date && !rate && !cost) continue; // skip garbage row
+
+        out.push({
+          date,
+          start: isNaN(start) ? 0 : start,
+          end: isNaN(end) ? 0 : end,
+          location: loc.toUpperCase(),
+          rate: isNaN(rate) ? 0 : rate,
+          cost: isNaN(cost) ? 0 : cost
+        });
+      }
+      return out;
+    }
+
+    function handleImportCSV(text) {
+      const parsed = parseCSV(text);
+      if (!parsed.length) {
+        alert("No valid rows in CSV.");
+        return;
+      }
+      const replace = confirm(
+        "Imported " + parsed.length + " rows.\n\nOK = REPLACE current data\nCancel = APPEND to current data"
+      );
+      if (replace) {
+        records = parsed;
+      } else {
+        records = records.concat(parsed);
+      }
+      save();
+      setAddMode();
+      render();
+    }
+
+    exportBtn.addEventListener("click", exportCSV);
+
+    importBtn.addEventListener("click", () => {
+      csvInput.value = "";
+      csvInput.click();
+    });
+
+    csvInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        handleImportCSV(ev.target.result || "");
+      };
+      reader.readAsText(file);
+    });
+
+    /* INIT */
     load();
     loadTheme();
     setAddMode();
