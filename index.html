@@ -1,642 +1,556 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>EV Charge Log</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    * {
-      box-sizing: border-box;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
+<meta charset="UTF-8">
+<title>EV Charge Log</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-    body {
-      margin: 0;
-      background: #f4f5f7;
-      color: #222;
-      transition: background 0.25s, color 0.25s;
-    }
+<style>
+/* ------------------ GLOBAL ------------------ */
+* {
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
 
-    .app {
-      max-width: 520px;
-      margin: 0 auto;
-      padding: 16px;
-    }
+body {
+  margin: 0;
+  background: #f4f5f7;
+  color: #222;
+  transition: background 0.25s, color 0.25s;
+}
 
-    .top-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-    }
+.app {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 16px;
+}
 
-    .top-bar h1 {
-      font-size: 22px;
-      margin: 0;
-    }
+/* ------------------ TOP ------------------ */
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.top-bar h1 {
+  margin: 0;
+  font-size: 22px;
+}
 
-    .theme-btn {
-      padding: 4px 12px;
-      border-radius: 999px;
-      border: 1px solid #d0d4dc;
-      background: #ffffff;
-      font-size: 13px;
-      cursor: pointer;
-    }
+.theme-btn {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
 
-    .card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 12px 14px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-      margin-bottom: 12px;
-      transition: background 0.25s, box-shadow 0.25s;
-    }
+/* ------------------ CARD ------------------ */
+.card {
+  background: #fff;
+  padding: 14px;
+  border-radius: 12px;
+  margin-top: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
 
-    .form-group {
-      margin-bottom: 10px;
-    }
+/* ------------------ FORM ------------------ */
+.form-group {
+  margin-bottom: 10px;
+}
 
-    .form-group label,
-    .form-row label {
-      font-size: 12px;
-      display: block;
-      margin-bottom: 2px;
-    }
+.form-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
 
-    .form-row {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 10px;
-      flex-wrap: wrap;
-    }
+.form-group label,
+.form-row label {
+  font-size: 12px;
+}
 
-    .field {
-      flex: 1 1 0;
-      min-width: 0;
-    }
+.input-base {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  background: white;
+  font-size: 15px;
+}
 
-    .input-base {
-      width: 100%;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid #d0d4dc;
-      font-size: 15px;
-      background: #ffffff;
-      color: #222;
-      transition: background 0.25s, color 0.25s, border-color 0.25s;
-      height: 42px;
-      -webkit-appearance: none;
-      appearance: none;
-    }
+input[type="date"]::-webkit-date-and-time-value {
+  padding-left: 4px;
+}
 
-    /* iOS date 对齐优化 */
-    input[type="date"] {
-      line-height: normal;
-    }
-    input[type="date"]::-webkit-date-and-time-value {
-      padding-left: 4px;
-    }
+.btn-primary {
+  width: 100%;
+  margin-top: 5px;
+  padding: 10px;
+  font-size: 15px;
+  color: white;
+  background: #0f9d58;
+  border-radius: 999px;
+  border: none;
+}
 
-    .btn-primary {
-      width: 100%;
-      padding: 10px;
-      border-radius: 999px;
-      border: none;
-      background: #0f9d58;
-      color: #fff;
-      font-weight: 600;
-      font-size: 15px;
-      margin-top: 4px;
-      cursor: pointer;
-    }
+.btn-secondary {
+  width: 100%;
+  padding: 8px;
+  margin-top: 6px;
+  background: #ddd;
+  border-radius: 999px;
+  border: none;
+  display: none;
+}
 
-    .btn-secondary {
-      width: 100%;
-      padding: 8px;
-      border-radius: 999px;
-      border: none;
-      background: #e3e6ee;
-      color: #333;
-      font-size: 14px;
-      margin-top: 6px;
-      display: none;
-      cursor: pointer;
-    }
+/* ------------------ SUMMARY ------------------ */
+.summary {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+.summary-box {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  background: #fff8d5;
+  font-weight: bold;
+  text-align: center;
+}
+.summary-box.blue {
+  background: #dff7ff;
+}
+.summary-box span {
+  display: block;
+  font-size: 11px;
+  color: #666;
+}
 
-    .btn-primary:active,
-    .btn-secondary:active {
-      opacity: 0.85;
-    }
+/* ------------------ TABLE (Excel GRID) ------------------ */
+.table-wrapper {
+  overflow-x: auto;
+}
 
-    .summary {
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      font-size: 14px;
-      flex-wrap: wrap;
-      margin-top: 4px;
-    }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+  min-width: 600px;
+}
 
-    .summary-box {
-      flex: 1 1 150px;
-      background: #fff8d5;
-      border-radius: 10px;
-      padding: 8px 10px;
-      font-weight: 600;
-      transition: background 0.25s, color 0.25s;
-    }
+th, td {
+  border: 1px solid #d0d4dc;
+  padding: 8px 10px;
+  white-space: nowrap;
+}
 
-    .summary-box span {
-      display: block;
-      font-size: 11px;
-      color: #777;
-      font-weight: 500;
-    }
+/* header */
+th {
+  background: #f2f4f7;
+  font-weight: 600;
+  text-align: center;
+}
 
-    .summary-box.blue {
-      background: #dff7ff;
-    }
+/* align left */
+td:nth-child(1), td:nth-child(4), td:nth-child(8),
+th:nth-child(1), th:nth-child(4), th:nth-child(8) {
+  text-align: left;
+}
 
-    .table-wrapper {
-      overflow-x: auto;
-    }
+/* align right */
+td:nth-child(2), td:nth-child(3), td:nth-child(5), td:nth-child(6), td:nth-child(7),
+th:nth-child(2), th:nth-child(3), th:nth-child(5), th:nth-child(6), th:nth-child(7) {
+  text-align: right;
+}
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-      margin-top: 4px;
-      min-width: 560px;
-    }
+/* empty */
+.empty {
+  text-align: center;
+  font-size: 13px;
+  color: #777;
+  padding: 10px 0;
+}
 
-    th,
-    td {
-      padding: 6px 4px;
-      border-bottom: 1px solid #e3e6ee;
-      text-align: right;
-      white-space: nowrap;
-      transition: background 0.25s, color 0.25s, border-color 0.25s;
-    }
+/* ------------------ ACTION ICONS ------------------ */
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.icon-btn img {
+  width: 18px;
+  height: 18px;
+  opacity: 0.85;
+}
 
-    th:nth-child(1),
-    td:nth-child(1),
-    th:nth-child(4),
-    td:nth-child(4),
-    th:nth-child(8),
-    td:nth-child(8) {
-      text-align: left;
-    }
+/* ------------------ DARK MODE ------------------ */
+body.dark {
+  background: #111;
+  color: #f5f5f5;
+}
 
-    th {
-      background: #f0f2f7;
-      position: sticky;
-      top: 0;
-      z-index: 1;
-    }
+body.dark .card {
+  background: #1c1c1e;
+}
+body.dark .input-base {
+  background: #2c2c2e;
+  border-color: #444;
+  color: white;
+}
 
-    .empty {
-      text-align: center;
-      padding: 10px 0;
-      font-size: 12px;
-      color: #888;
-    }
+body.dark table td,
+body.dark table th {
+  border-color: #333;
+}
 
-    .monthly-list {
-      font-size: 13px;
-    }
+body.dark table th {
+  background: #2c2c2e;
+}
 
-    .month-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 4px 0;
-      border-bottom: 1px solid #eee;
-      transition: border-color 0.25s;
-    }
+body.dark .summary-box {
+  background: #2c2c2e;
+  color: white;
+}
+body.dark .summary-box.blue {
+  background: #123347;
+}
 
-    .month-row:last-child {
-      border-bottom: none;
-    }
+body.dark .theme-btn {
+  background: #2c2c2e;
+  border-color: #555;
+  color: white;
+}
 
-    .month-label {
-      color: #555;
-    }
-
-    .month-value {
-      font-weight: 600;
-    }
-
-    .icon-btn {
-      background: transparent;
-      border: none;
-      padding: 2px;
-      cursor: pointer;
-      margin-right: 4px;
-    }
-
-    .icon-btn img {
-      width: 17px;
-      height: 17px;
-      opacity: 0.8;
-      transition: opacity 0.2s;
-    }
-
-    .icon-btn:active img {
-      opacity: 1;
-    }
-
-    /* 让白色 edit icon 在浅色模式下变深一点 */
-    body:not(.dark) .icon-btn img.edit-icon {
-      filter: invert(0%) brightness(20%);
-    }
-
-    @media (min-width: 768px) {
-      body {
-        background: #e3e6ee;
-      }
-      .app {
-        margin-top: 24px;
-        margin-bottom: 24px;
-        max-width: 900px;
-      }
-      .top-bar h1 {
-        font-size: 24px;
-      }
-      table {
-        font-size: 13px;
-      }
-    }
-
-    /* Dark mode */
-    body.dark {
-      background: #111111;
-      color: #f5f5f5;
-    }
-
-    body.dark .card {
-      background: #1c1c1e;
-      box-shadow: none;
-    }
-
-    body.dark .input-base {
-      background: #2c2c2e;
-      border-color: #444;
-      color: #f5f5f5;
-    }
-
-    body.dark .summary-box {
-      background: #2c2c2e;
-      color: #f5f5f5;
-    }
-
-    body.dark .summary-box span {
-      color: #b0b0b0;
-    }
-
-    body.dark .summary-box.blue {
-      background: #123347;
-    }
-
-    body.dark table {
-      background: #1c1c1e;
-    }
-
-    body.dark th {
-      background: #2c2c2e;
-    }
-
-    body.dark th,
-    body.dark td {
-      border-bottom-color: #333;
-    }
-
-    body.dark .month-row {
-      border-bottom-color: #333;
-    }
-
-    body.dark .empty {
-      color: #aaaaaa;
-    }
-
-    body.dark .theme-btn {
-      background: #2c2c2e;
-      border-color: #555;
-      color: #f5f5f5;
-    }
-  </style>
+</style>
 </head>
 
 <body>
-  <div class="app">
-    <div class="top-bar">
-      <h1>EV Charge Log</h1>
-      <button id="theme-toggle" class="theme-btn">☾ Dark</button>
+
+<div class="app">
+
+  <div class="top-bar">
+    <h1>EV Charge Log</h1>
+    <button id="theme-toggle" class="theme-btn">☾ Dark</button>
+  </div>
+
+  <!-- FORM -->
+  <div class="card">
+    <div class="form-group">
+      <label>Date</label>
+      <input id="date" type="date" class="input-base">
     </div>
 
-    <!-- Form -->
-    <div class="card">
-      <div class="form-group">
-        <label>Date</label>
-        <input id="date" type="date" class="input-base" />
+    <div class="form-row">
+      <div style="flex:1">
+        <label>Start %</label>
+        <input id="start" type="number" class="input-base">
       </div>
 
-      <div class="form-row">
-        <div class="field">
-          <label>Start %</label>
-          <input id="start" type="number" class="input-base" />
-        </div>
-        <div class="field">
-          <label>End %</label>
-          <input id="end" type="number" class="input-base" />
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>Location</label>
-        <input id="location" type="text" class="input-base" placeholder="BH / PV / Bamboo…" />
-      </div>
-
-      <div class="form-row">
-        <div class="field">
-          <label>Rate (RM/kWh)</label>
-          <input id="rate" type="number" step="0.01" class="input-base" />
-        </div>
-        <div class="field">
-          <label>Cost (RM)</label>
-          <input id="cost" type="number" step="0.01" class="input-base" />
-        </div>
-      </div>
-
-      <button class="btn-primary" id="submit-btn">Add Record</button>
-      <button class="btn-secondary" id="cancel-btn">Cancel Edit</button>
-    </div>
-
-    <!-- Summary -->
-    <div class="summary">
-      <div class="summary-box" id="total-cost-box">
-        RM0.00
-        <span>Total Cost</span>
-      </div>
-      <div class="summary-box blue" id="total-kwh-box">
-        0.00 kWh
-        <span>Total Charged</span>
+      <div style="flex:1">
+        <label>End %</label>
+        <input id="end" type="number" class="input-base">
       </div>
     </div>
 
-    <!-- Monthly Summary -->
-    <div class="card">
-      <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Monthly Total (RM)</div>
-      <div id="monthly-summary" class="monthly-list">
-        <div class="empty">No data yet</div>
+    <div class="form-group">
+      <label>Location</label>
+      <input id="location" type="text" class="input-base" placeholder="BH / PV / BAMBOO HILL">
+    </div>
+
+    <div class="form-row">
+      <div style="flex:1">
+        <label>Rate (RM/kWh)</label>
+        <input id="rate" type="number" step="0.01" class="input-base">
+      </div>
+
+      <div style="flex:1">
+        <label>Cost (RM)</label>
+        <input id="cost" type="number" step="0.01" class="input-base">
       </div>
     </div>
 
-    <!-- Table -->
-    <div class="card">
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Start%</th>
-              <th>End%</th>
-              <th>Location</th>
-              <th>Rate</th>
-              <th>Cost</th>
-              <th>Charged</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="table-body"></tbody>
-        </table>
-      </div>
-      <div class="empty" id="empty-row">No data yet</div>
+    <button class="btn-primary" id="submit-btn">Add Record</button>
+    <button class="btn-secondary" id="cancel-btn">Cancel Edit</button>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="summary-box" id="total-cost-box">RM0.00 <span>Total Cost</span></div>
+    <div class="summary-box blue" id="total-kwh-box">0.00 kWh <span>Total Charged</span></div>
+  </div>
+
+  <!-- Monthly Summary -->
+  <div class="card">
+    <div style="font-size:14px;font-weight:600;margin-bottom:6px;">Monthly Total (RM)</div>
+    <div id="monthly-summary">
+      <div class="empty">No data yet</div>
     </div>
   </div>
 
-  <script>
-    const STORAGE_KEY = "ev_charge_log_data";
-    const THEME_KEY = "ev_charge_theme";
+  <!-- TABLE -->
+  <div class="card">
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Start%</th>
+            <th>End%</th>
+            <th>Location</th>
+            <th>Rate</th>
+            <th>Cost</th>
+            <th>Charged</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="empty-row">No data yet</div>
+  </div>
 
-    let records = [];
-    let editingIndex = null;
+</div>
 
-    const dateInput = document.getElementById("date");
-    const startInput = document.getElementById("start");
-    const endInput = document.getElementById("end");
-    const locationInput = document.getElementById("location");
-    const rateInput = document.getElementById("rate");
-    const costInput = document.getElementById("cost");
+<script>
+/* ------------------ STORAGE ------------------ */
+const STORAGE_KEY = "ev_charge_log";
+const THEME_KEY = "ev_theme";
 
-    const submitBtn = document.getElementById("submit-btn");
-    const cancelBtn = document.getElementById("cancel-btn");
-    const themeBtn = document.getElementById("theme-toggle");
+let records = [];
+let editingIndex = null;
 
-    function load() {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        try {
-          records = JSON.parse(raw) || [];
-        } catch {
-          records = [];
-        }
-      }
-    }
+/* inputs */
+const dateInput = document.getElementById("date");
+const startInput = document.getElementById("start");
+const endInput = document.getElementById("end");
+const locationInput = document.getElementById("location");
+const rateInput = document.getElementById("rate");
+const costInput = document.getElementById("cost");
 
-    function save() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-    }
+/* buttons */
+const submitBtn = document.getElementById("submit-btn");
+const cancelBtn = document.getElementById("cancel-btn");
+const themeBtn = document.getElementById("theme-toggle");
 
-    function applyTheme(theme) {
-      if (theme === "dark") {
-        document.body.classList.add("dark");
-        themeBtn.textContent = "☀ Light";
-      } else {
-        document.body.classList.remove("dark");
-        themeBtn.textContent = "☾ Dark";
-      }
-    }
+/* ------------------ LOCATION AUTO UPPERCASE ------------------ */
+locationInput.addEventListener("input", () => {
+  locationInput.value = locationInput.value.toUpperCase();
+});
 
-    function loadTheme() {
-      const saved = localStorage.getItem(THEME_KEY) || "light";
-      applyTheme(saved);
-    }
+/* ------------------ DATE FORMAT ------------------ */
+function formatDate(d) {
+  if (!d) return "";
+  const dd = new Date(d);
+  if (isNaN(dd)) return d;
 
-    themeBtn.addEventListener("click", () => {
-      const newTheme = document.body.classList.contains("dark") ? "light" : "dark";
-      localStorage.setItem(THEME_KEY, newTheme);
-      applyTheme(newTheme);
+  const day = dd.getDate();
+  const month = dd.getMonth() + 1;
+  const year = dd.getFullYear();
+
+  return `${day}/${month}/${year}`;
+}
+
+/* ------------------ LOAD / SAVE ------------------ */
+function load() {
+  try {
+    records = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+  } catch {
+    records = [];
+  }
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+}
+
+/* ------------------ THEME ------------------ */
+function applyTheme(t) {
+  if (t === "dark") {
+    document.body.classList.add("dark");
+    themeBtn.textContent = "☀ Light";
+  } else {
+    document.body.classList.remove("dark");
+    themeBtn.textContent = "☾ Dark";
+  }
+}
+
+function loadTheme() {
+  applyTheme(localStorage.getItem(THEME_KEY) || "light");
+}
+
+themeBtn.onclick = () => {
+  const newTheme = document.body.classList.contains("dark") ? "light" : "dark";
+  localStorage.setItem(THEME_KEY, newTheme);
+  applyTheme(newTheme);
+};
+
+/* ------------------ FORM MODE ------------------ */
+function setAddMode() {
+  editingIndex = null;
+  submitBtn.textContent = "Add Record";
+  cancelBtn.style.display = "none";
+
+  if (!dateInput.value) {
+    const today = new Date();
+    dateInput.value = today.toISOString().slice(0, 10);
+  }
+
+  startInput.value = "";
+  endInput.value = "";
+  locationInput.value = "";
+  rateInput.value = "";
+  costInput.value = "";
+}
+
+function setEditMode(i) {
+  const r = records[i];
+  editingIndex = i;
+
+  dateInput.value = r.date;
+  startInput.value = r.start;
+  endInput.value = r.end;
+  locationInput.value = r.location;
+  rateInput.value = r.rate;
+  costInput.value = r.cost;
+
+  submitBtn.textContent = "Save Changes";
+  cancelBtn.style.display = "block";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* ------------------ DELETE ------------------ */
+function deleteRecord(i) {
+  if (!confirm("Delete this record?")) return;
+  records.splice(i, 1);
+  save();
+  setAddMode();
+  render();
+}
+
+/* ------------------ MAIN RENDER ------------------ */
+function render() {
+  const tbody = document.getElementById("table-body");
+  const emptyRow = document.getElementById("empty-row");
+  const monthlyDiv = document.getElementById("monthly-summary");
+
+  tbody.innerHTML = "";
+  monthlyDiv.innerHTML = "";
+
+  if (records.length === 0) {
+    emptyRow.style.display = "block";
+    monthlyDiv.innerHTML = '<div class="empty">No data yet</div>';
+    document.getElementById("total-cost-box").innerHTML = "RM0.00<span>Total Cost</span>";
+    document.getElementById("total-kwh-box").innerHTML = "0.00 kWh<span>Total Charged</span>";
+    return;
+  }
+
+  emptyRow.style.display = "none";
+
+  let totalCost = 0;
+  let totalKwh = 0;
+  const monthly = {};
+
+  const sorted = records
+    .map((r, i) => ({ ...r, _i: i }))
+    .sort((a, b) => (a.date > b.date ? 1 : -1));
+
+  sorted.forEach(r => {
+    const charged = r.rate > 0 ? r.cost / r.rate : 0;
+    totalCost += r.cost;
+    totalKwh += charged;
+
+    const key = r.date.slice(0, 7);
+    monthly[key] = (monthly[key] || 0) + r.cost;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${formatDate(r.date)}</td>
+      <td>${r.start}</td>
+      <td>${r.end}</td>
+      <td>${r.location}</td>
+      <td>${r.rate.toFixed(2)}</td>
+      <td>RM${r.cost.toFixed(2)}</td>
+      <td>${charged.toFixed(2)}</td>
+      <td></td>
+    `;
+
+    const actionCell = tr.lastElementChild;
+
+    /* edit button */
+    const editBtn = document.createElement("button");
+    editBtn.className = "icon-btn";
+    editBtn.innerHTML =
+      '<img src="https://img.icons8.com/ios-filled/50/ffffff/edit.png">';
+    editBtn.onclick = () => setEditMode(r._i);
+
+    /* delete button */
+    const delBtn = document.createElement("button");
+    delBtn.className = "icon-btn";
+    delBtn.innerHTML =
+      '<img src="https://img.icons8.com/ios-glyphs/30/fa314a/trash.png">';
+    delBtn.onclick = () => deleteRecord(r._i);
+
+    actionCell.appendChild(editBtn);
+    actionCell.appendChild(delBtn);
+
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById("total-cost-box").innerHTML =
+    "RM" + totalCost.toFixed(2) + "<span>Total Cost</span>";
+
+  document.getElementById("total-kwh-box").innerHTML =
+    totalKwh.toFixed(2) + " kWh<span>Total Charged</span>";
+
+  Object.keys(monthly)
+    .sort()
+    .forEach(key => {
+      const row = document.createElement("div");
+      row.className = "month-row";
+      row.innerHTML = `
+        <div>${key.slice(5)}/${key.slice(0,4)}</div>
+        <div><b>RM${monthly[key].toFixed(2)}</b></div>
+      `;
+      monthlyDiv.appendChild(row);
     });
+}
 
-    function setAddMode() {
-      editingIndex = null;
-      submitBtn.textContent = "Add Record";
-      cancelBtn.style.display = "none";
+/* ------------------ SUBMIT ------------------ */
+function submit() {
+  const r = {
+    date: dateInput.value,
+    start: Number(startInput.value),
+    end: Number(endInput.value),
+    location: locationInput.value.trim(),
+    rate: Number(rateInput.value),
+    cost: Number(costInput.value)
+  };
 
-      if (!dateInput.value) {
-        const today = new Date();
-        dateInput.value = today.toISOString().slice(0, 10);
-      }
-      startInput.value = "";
-      endInput.value = "";
-      locationInput.value = "";
-      rateInput.value = "";
-      costInput.value = "";
-    }
+  if (!r.date || !r.rate || !r.cost) {
+    alert("Date, Rate, Cost required.");
+    return;
+  }
 
-    function setEditMode(i) {
-      const r = records[i];
-      editingIndex = i;
-      dateInput.value = r.date;
-      startInput.value = r.start;
-      endInput.value = r.end;
-      locationInput.value = r.location;
-      rateInput.value = r.rate;
-      costInput.value = r.cost;
+  if (editingIndex === null) {
+    records.push(r);
+  } else {
+    records[editingIndex] = r;
+  }
 
-      submitBtn.textContent = "Save Changes";
-      cancelBtn.style.display = "block";
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
+  save();
+  setAddMode();
+  render();
+}
 
-    function deleteRecord(i) {
-      if (!confirm("Delete this record?")) return;
-      records.splice(i, 1);
-      save();
-      setAddMode();
-      render();
-    }
+/* ------------------ INIT ------------------ */
+submitBtn.onclick = submit;
+cancelBtn.onclick = setAddMode;
 
-    function formatDate(d) {
-      if (!d) return "";
-      const dd = new Date(d);
-      if (isNaN(dd)) return d;
-      return dd.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "2-digit"
-      });
-    }
+load();
+loadTheme();
+setAddMode();
+render();
 
-    function render() {
-      const tbody = document.getElementById("table-body");
-      const emptyRow = document.getElementById("empty-row");
-      const monthlyDiv = document.getElementById("monthly-summary");
-
-      tbody.innerHTML = "";
-      monthlyDiv.innerHTML = "";
-
-      if (records.length === 0) {
-        emptyRow.style.display = "block";
-        monthlyDiv.innerHTML = '<div class="empty">No data yet</div>';
-        document.getElementById("total-cost-box").firstChild.nodeValue = "RM0.00";
-        document.getElementById("total-kwh-box").firstChild.nodeValue = "0.00 kWh";
-        return;
-      }
-
-      emptyRow.style.display = "none";
-
-      let totalCost = 0;
-      let totalKwh = 0;
-      const monthly = {};
-
-      const decorated = records
-        .map((r, i) => ({ ...r, _i: i }))
-        .sort((a, b) => (a.date || "").localeCompare(b.date || ""));
-
-      decorated.forEach((r) => {
-        const i = r._i;
-        const charged = r.rate > 0 ? r.cost / r.rate : 0;
-
-        totalCost += r.cost;
-        totalKwh += charged;
-
-        if (r.date) {
-          const key = r.date.slice(0, 7);
-          monthly[key] = (monthly[key] || 0) + r.cost;
-        }
-
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${formatDate(r.date)}</td>
-          <td>${r.start}</td>
-          <td>${r.end}</td>
-          <td>${r.location}</td>
-          <td>${r.rate.toFixed(2)}</td>
-          <td>RM${r.cost.toFixed(2)}</td>
-          <td>${charged.toFixed(2)}</td>
-          <td></td>
-        `;
-
-        const actionCell = tr.lastElementChild;
-
-        const editBtn = document.createElement("button");
-        editBtn.className = "icon-btn";
-        editBtn.innerHTML = '<img class="edit-icon" src="https://img.icons8.com/ios-filled/50/ffffff/edit.png"/>';
-        editBtn.onclick = () => setEditMode(i);
-
-        const delBtn = document.createElement("button");
-        delBtn.className = "icon-btn";
-        delBtn.innerHTML = '<img src="https://img.icons8.com/ios-glyphs/30/fa314a/trash.png"/>';
-        delBtn.onclick = () => deleteRecord(i);
-
-        actionCell.appendChild(editBtn);
-        actionCell.appendChild(delBtn);
-
-        tbody.appendChild(tr);
-      });
-
-      document.getElementById("total-cost-box").firstChild.nodeValue =
-        "RM" + totalCost.toFixed(2);
-      document.getElementById("total-kwh-box").firstChild.nodeValue =
-        totalKwh.toFixed(2) + " kWh";
-
-      Object.keys(monthly)
-        .sort()
-        .forEach((key) => {
-          const div = document.createElement("div");
-          div.className = "month-row";
-          div.innerHTML = `
-            <div class="month-label">${key.slice(5)}/${key.slice(0, 4)}</div>
-            <div class="month-value">RM${monthly[key].toFixed(2)}</div>
-          `;
-          monthlyDiv.appendChild(div);
-        });
-    }
-
-    function submit() {
-      const r = {
-        date: dateInput.value,
-        start: Number(startInput.value),
-        end: Number(endInput.value),
-        location: locationInput.value.trim(),
-        rate: Number(rateInput.value),
-        cost: Number(costInput.value),
-      };
-
-      if (!r.date || !r.rate || !r.cost) {
-        alert("Date, Rate, Cost cannot be empty.");
-        return;
-      }
-
-      if (editingIndex === null) {
-        records.push(r);
-      } else {
-        records[editingIndex] = r;
-      }
-
-      save();
-      setAddMode();
-      render();
-    }
-
-    submitBtn.onclick = submit;
-    cancelBtn.onclick = setAddMode;
-
-    load();
-    loadTheme();
-    setAddMode();
-    render();
-  </script>
+</script>
 </body>
 </html>
-
